@@ -70,6 +70,26 @@ export interface RecipeInput {
   images?: { url: string; position: number }[]
 }
 
+export interface DuplicateRecipeMatch {
+  id: string
+  title: string
+  imageUrl: string | null
+  authorName: string
+  category: string | null
+  prepTime: string | null
+  score: number
+  reasons: string[]
+}
+
+export function useDuplicateRecipeCheck() {
+  return useMutation({
+    mutationFn: async (data: Pick<RecipeInput, 'title' | 'prepTime' | 'category' | 'ingredients'>) => {
+      const res = await api.post<ApiResponse<DuplicateRecipeMatch[]>>('/recipes/check-duplicates', data)
+      return res.data.data
+    },
+  })
+}
+
 export function useCreateRecipe() {
   const qc = useQueryClient()
   return useMutation({

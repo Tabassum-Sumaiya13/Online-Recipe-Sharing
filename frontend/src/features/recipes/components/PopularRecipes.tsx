@@ -1,9 +1,8 @@
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePopularRecipes } from "@/features/recipes/api";
 import { RecipeCard } from "@/components/shared/RecipeCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 const PopularRecipes = () => {
   const navigate = useNavigate();

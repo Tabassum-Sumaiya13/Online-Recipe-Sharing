@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FormProvider, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,12 +19,15 @@ import { IngredientListBuilder } from '@/features/recipe-form/components/Ingredi
 import { StepByStepBuilder } from '@/features/recipe-form/components/StepByStepBuilder'
 import { VideoTutorialInput } from '@/features/recipe-form/components/VideoTutorialInput'
 import { recipeFormSchema, type RecipeFormValues } from '@/features/recipe-form/schemas'
-import { useCreateRecipe, type RecipeInput } from '@/features/recipes/api'
+import { useCreateRecipe, useDuplicateRecipeCheck, type DuplicateRecipeMatch, type RecipeInput } from '@/features/recipes/api'
 import { CATEGORIES } from '@/lib/constants'
 
 export default function PostRecipePage() {
   const navigate = useNavigate()
   const { mutate, isPending } = useCreateRecipe()
+  const duplicateCheck = useDuplicateRecipeCheck()
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateRecipeMatch[]>([])
+  const [pendingPayload, setPendingPayload] = useState<RecipeInput | null>(null)
 
   const methods = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
@@ -41,9 +45,9 @@ export default function PostRecipePage() {
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = methods
 
-  const onSubmit = (values: RecipeFormValues) => {
+  const buildPayload = (values: RecipeFormValues): RecipeInput => {
     const imageUrls = (values.images ?? []).filter(Boolean)
-    const payload: RecipeInput = {
+    return {
       title: values.title,
       description: values.description,
       imageUrl: imageUrls[0] ?? values.imageUrl ?? null,
@@ -64,9 +68,36 @@ export default function PostRecipePage() {
       tags: values.tags,
       images: imageUrls.map((url, i) => ({ url, position: i })),
     }
+  }
+
+  const publishRecipe = (payload: RecipeInput) => {
     mutate(payload, {
       onSuccess: (recipe) => navigate(`/recipes/${recipe.id}`),
     })
+  }
+
+  const onSubmit = async (values: RecipeFormValues) => {
+    const payload = buildPayload(values)
+    const matches = await duplicateCheck.mutateAsync({
+      title: payload.title,
+      prepTime: payload.prepTime ?? undefined,
+      category: payload.category ?? undefined,
+      ingredients: payload.ingredients,
+    })
+
+    if (matches.length > 0) {
+      setDuplicateMatches(matches)
+      setPendingPayload(payload)
+      return
+    }
+
+    publishRecipe(payload)
+  }
+
+  const publishDespiteDuplicates = () => {
+    if (!pendingPayload) return
+    setDuplicateMatches([])
+    publishRecipe(pendingPayload)
   }
 
   return (
@@ -121,12 +152,69 @@ export default function PostRecipePage() {
             </div>
           </div>
 
+          {duplicateMatches.length > 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-950 shadow-sm">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div>
+                    <h2 className="text-sm font-semibold">Possible duplicate recipes found</h2>
+                    <p className="mt-1 text-sm text-amber-900">
+                      These recipes look similar. You can review them or publish your version anyway.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {duplicateMatches.map((match) => (
+                      <div key={match.id} className="rounded-md border border-amber-200 bg-background/80 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/recipes/${match.id}`)}
+                              className="text-left text-sm font-medium text-foreground hover:text-primary"
+                            >
+                              {match.title}
+                            </button>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              by {match.authorName}
+                              {match.category ? ` - ${match.category}` : ''}
+                              {match.prepTime ? ` - ${match.prepTime}` : ''}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
+                            {Math.round(match.score)}%
+                          </span>
+                        </div>
+                        {match.reasons.length > 0 && (
+                          <p className="mt-2 text-xs text-amber-800">
+                            Match: {match.reasons.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button type="button" variant="outline" onClick={() => setDuplicateMatches([])}>
+                      Review my recipe
+                    </Button>
+                    <Button type="button" onClick={publishDespiteDuplicates} disabled={isPending}>
+                      {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Publish anyway
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <IngredientListBuilder />
           <StepByStepBuilder />
           <VideoTutorialInput />
 
-          <Button type="submit" size="lg" className="w-full" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" size="lg" className="w-full" disabled={isPending || duplicateCheck.isPending}>
+            {(isPending || duplicateCheck.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Publish Recipe
           </Button>
         </form>

@@ -34,6 +34,19 @@ interface CreateRecipeInput {
   authorAvatar?: string
 }
 
+type DuplicateRecipeInput = Pick<CreateRecipeInput, 'title' | 'prepTime' | 'category' | 'ingredients'>
+
+interface DuplicateRecipeMatch {
+  id: string
+  title: string
+  imageUrl: string | null
+  authorName: string
+  category: string | null
+  prepTime: string | null
+  score: number
+  reasons: string[]
+}
+
 export const recipeSelect = {
   id: true,
   title: true,
@@ -59,6 +72,55 @@ export const recipeSelect = {
   nutrition: true,
   tags: true,
   images: { orderBy: { position: 'asc' as const } },
+}
+
+const COMMON_RECIPE_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'best',
+  'classic',
+  'easy',
+  'fresh',
+  'homemade',
+  'recipe',
+  'style',
+  'the',
+  'with',
+])
+
+function normalizeWords(value?: string | null) {
+  return (value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !COMMON_RECIPE_WORDS.has(word))
+}
+
+function normalizeIngredient(value: string) {
+  return normalizeWords(value).join(' ')
+}
+
+function overlapScore(left: string[], right: string[]) {
+  const leftSet = new Set(left)
+  const rightSet = new Set(right)
+  if (leftSet.size === 0 || rightSet.size === 0) return 0
+
+  let matches = 0
+  for (const item of leftSet) {
+    if (rightSet.has(item)) matches += 1
+  }
+
+  return matches / Math.max(leftSet.size, rightSet.size)
+}
+
+function ingredientOverlapScore(
+  inputIngredients: DuplicateRecipeInput['ingredients'],
+  existingIngredients: { item: string }[],
+) {
+  const inputItems = inputIngredients.map((ingredient) => normalizeIngredient(ingredient.item)).filter(Boolean)
+  const existingItems = existingIngredients.map((ingredient) => normalizeIngredient(ingredient.item)).filter(Boolean)
+  return overlapScore(inputItems, existingItems)
 }
 
 export async function listRecipes(filters: RecipeFilters) {
@@ -114,6 +176,65 @@ export async function getRecipeById(id: string) {
   const recipe = await prisma.recipe.findUnique({ where: { id }, select: recipeSelect })
   if (!recipe) throw new AppError('Recipe not found', 404, 'NOT_FOUND')
   return recipe
+}
+
+export async function findDuplicateRecipeCandidates(input: DuplicateRecipeInput) {
+  const titleWords = normalizeWords(input.title)
+  const searchTerms = titleWords.slice(0, 5)
+  const where: Prisma.RecipeWhereInput = {
+    OR: [
+      ...(input.category ? [{ category: { equals: input.category } }] : []),
+      ...searchTerms.map((word) => ({ title: { contains: word } })),
+    ],
+  }
+
+  const candidates = await prisma.recipe.findMany({
+    where: where.OR?.length ? where : {},
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      authorName: true,
+      category: true,
+      prepTime: true,
+      ingredients: { select: { item: true } },
+    },
+  })
+
+  const matches: DuplicateRecipeMatch[] = candidates
+    .map((recipe) => {
+      const titleScore = overlapScore(titleWords, normalizeWords(recipe.title))
+      const ingredientScore = ingredientOverlapScore(input.ingredients, recipe.ingredients)
+      const sameCategory = Boolean(input.category && recipe.category === input.category)
+      const samePrepTime = Boolean(input.prepTime && recipe.prepTime === input.prepTime)
+      const score = Math.round(
+        (titleScore * 45 + ingredientScore * 40 + (sameCategory ? 10 : 0) + (samePrepTime ? 5 : 0)) * 100,
+      ) / 100
+      const reasons: string[] = []
+
+      if (titleScore >= 0.4) reasons.push('similar title')
+      if (ingredientScore >= 0.35) reasons.push('shared ingredients')
+      if (sameCategory) reasons.push('same category')
+      if (samePrepTime) reasons.push('same prep time')
+
+      return {
+        id: recipe.id,
+        title: recipe.title,
+        imageUrl: recipe.imageUrl,
+        authorName: recipe.authorName,
+        category: recipe.category,
+        prepTime: recipe.prepTime,
+        score,
+        reasons,
+      }
+    })
+    .filter((match) => match.score >= 45 || match.reasons.length >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+
+  return matches
 }
 
 export async function createRecipe(input: CreateRecipeInput) {

@@ -42,6 +42,11 @@ export async function detail(req: Request, res: Response): Promise<void> {
   res.json({ success: true, data: recipe })
 }
 
+export async function checkDuplicates(req: Request, res: Response): Promise<void> {
+  const matches = await recipeService.findDuplicateRecipeCandidates(req.body)
+  res.json({ success: true, data: matches })
+}
+
 export async function create(req: Request, res: Response): Promise<void> {
   const user = req.user!
   const recipe = await recipeService.createRecipe({

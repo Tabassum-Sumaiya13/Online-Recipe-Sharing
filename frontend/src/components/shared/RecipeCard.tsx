@@ -41,9 +41,6 @@ export function RecipeCard({ recipe, isFavorited, onToggleFavorite, className }:
     onToggleFavorite(recipe.id, isFavorited ?? false)
   }
 
-  // Show save button always: filled when favorited, outline when not
-  const showSave = !!user || true // always show; logic handles auth
-
   return (
     <motion.div
       whileHover={reduce ? {} : { y: -4 }}

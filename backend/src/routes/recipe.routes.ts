@@ -4,6 +4,7 @@ import { validate } from '../middlewares/validate.middleware'
 import { requireAuth } from '../middlewares/auth.middleware'
 import {
   createRecipeSchema,
+  duplicateRecipeCheckSchema,
   updateRecipeSchema,
   recipeQuerySchema,
   recipeParamSchema,
@@ -15,6 +16,7 @@ const router = Router()
 router.get('/', validate(recipeQuerySchema), asyncHandler(recipeController.list))
 router.get('/popular', asyncHandler(recipeController.popular))
 router.get('/mine', requireAuth, asyncHandler(recipeController.mine))
+router.post('/check-duplicates', requireAuth, validate(duplicateRecipeCheckSchema), asyncHandler(recipeController.checkDuplicates))
 router.get('/:id', validate(recipeParamSchema), asyncHandler(recipeController.detail))
 router.post('/', requireAuth, validate(createRecipeSchema), asyncHandler(recipeController.create))
 router.patch('/:id', requireAuth, validate(updateRecipeSchema), asyncHandler(recipeController.update))

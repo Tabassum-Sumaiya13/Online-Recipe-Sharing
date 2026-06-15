@@ -42,6 +42,15 @@ export const updateRecipeSchema = z.object({
   body: createRecipeSchema.shape.body.partial(),
 })
 
+export const duplicateRecipeCheckSchema = z.object({
+  body: createRecipeSchema.shape.body.pick({
+    title: true,
+    prepTime: true,
+    category: true,
+    ingredients: true,
+  }),
+})
+
 export const recipeQuerySchema = z.object({
   query: z.object({
     search: z.string().optional(),

@@ -174,8 +174,8 @@ const HeroSection = () => {
                     style={{ left: `${leftPct}%`, top: `${topPct}%` }}
                     initial={false}
                     animate={{
-                      width: isActive ? 84 : 62,
-                      height: isActive ? 84 : 62,
+                      width: isActive ? 88 : 62,
+                      height: isActive ? 88 : 62,
                       x: "-50%",
                       y: "-50%",
                       opacity: isActive ? 1 : 0.6,

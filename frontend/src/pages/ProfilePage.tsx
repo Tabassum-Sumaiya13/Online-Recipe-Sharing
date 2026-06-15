@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { BadgeCheck, MapPin, Pencil, ChefHat, Heart, BookOpen, X } from 'lucide-react'
+import { MapPin, Pencil, ChefHat, Heart, BookOpen, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,9 +58,9 @@ export default function ProfilePage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="font-display text-xl font-bold text-foreground">{displayName}</h1>
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {/* <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                     <BadgeCheck className="h-3.5 w-3.5" /> Verified Chef
-                  </span>
+                  </span> */}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   @{displayName.toLowerCase().replace(/\s+/g, '')} · Member {memberSince}
