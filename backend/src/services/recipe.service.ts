@@ -122,7 +122,7 @@ export async function createRecipe(input: CreateRecipeInput) {
       title: input.title,
       description: input.description,
       imageUrl: input.imageUrl,
-      authorId: input.authorId,
+      author: { connect: { id: input.authorId } },
       authorName: input.authorName,
       authorAvatar: input.authorAvatar,
       prepTime: input.prepTime,
