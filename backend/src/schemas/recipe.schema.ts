@@ -8,6 +8,8 @@ const ingredientSchema = z.object({
 const instructionSchema = z.object({
   step: z.string().min(1),
   position: z.number().int().default(0),
+  mediaUrl: z.string().url().max(500).optional(),
+  mediaType: z.enum(['image', 'video']).optional(),
 })
 
 const nutritionSchema = z.object({
@@ -31,6 +33,7 @@ export const createRecipeSchema = z.object({
     instructions: z.array(instructionSchema).min(1),
     nutrition: z.array(nutritionSchema).optional().default([]),
     tags: z.array(z.string().max(100)).optional().default([]),
+    images: z.array(z.object({ url: z.string().url().max(500), position: z.number().int().default(0) })).optional().default([]),
   }),
 })
 

@@ -72,7 +72,7 @@ const CategoryGrid = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
               whileHover={{ y: -4 }}
-              onClick={() => navigate(`/recipes?category=${encodeURIComponent(cat.name)}`)}
+              onClick={() => navigate(`/categories?category=${encodeURIComponent(cat.name)}`)}
               className="group relative rounded-card overflow-hidden cursor-pointer aspect-[3/4] shadow-card hover:shadow-card-hover transition-all"
             >
               <img

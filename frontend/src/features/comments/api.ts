@@ -6,6 +6,7 @@ export interface Comment {
   id: string
   content: string
   rating: number | null
+  imageUrl?: string | null
   createdAt: string
   updatedAt: string
   user: {
@@ -33,7 +34,7 @@ export function useComments(recipeId: string) {
 export function useCreateComment(recipeId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { content: string; rating?: number }) => {
+    mutationFn: async (data: { content: string; rating?: number; imageUrl?: string }) => {
       const res = await api.post<ApiResponse<Comment>>(`/comments/recipe/${recipeId}`, data)
       return res.data.data
     },

@@ -13,4 +13,11 @@ router.post(
   asyncHandler(uploadController.uploadImage),
 )
 
+router.post(
+  '/images',
+  requireAuth,
+  uploadMiddleware.array('images', 10),
+  asyncHandler(uploadController.uploadImages),
+)
+
 export default router

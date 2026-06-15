@@ -9,6 +9,7 @@ export async function getCommentsByRecipe(recipeId: string) {
       id: true,
       content: true,
       rating: true,
+      imageUrl: true,
       createdAt: true,
       updatedAt: true,
       user: {
@@ -23,6 +24,7 @@ interface CreateCommentInput {
   userId: string
   content: string
   rating?: number
+  imageUrl?: string
 }
 
 export async function createComment(input: CreateCommentInput) {
@@ -36,11 +38,13 @@ export async function createComment(input: CreateCommentInput) {
         userId: input.userId,
         content: input.content,
         rating: input.rating,
+        imageUrl: input.imageUrl,
       },
       select: {
         id: true,
         content: true,
         rating: true,
+        imageUrl: true,
         createdAt: true,
         updatedAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
@@ -71,6 +75,7 @@ export async function updateComment(
         id: true,
         content: true,
         rating: true,
+        imageUrl: true,
         createdAt: true,
         updatedAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },

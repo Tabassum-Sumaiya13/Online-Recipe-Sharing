@@ -67,7 +67,10 @@ export default function RecipeDetailPage() {
 
   if (!recipe) return <div className="text-center py-16 text-muted-foreground">Recipe not found.</div>
 
-  const images = [resolveRecipeImage(recipe.imageUrl)]
+  const images =
+    recipe.images && recipe.images.length > 0
+      ? recipe.images.map((img) => img.url)
+      : [resolveRecipeImage(recipe.imageUrl)]
   const rating = Number(recipe.rating)
 
   return (
@@ -170,17 +173,19 @@ export default function RecipeDetailPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            {user && (
-              <Button
-                variant={isFavorited ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => toggleFavorite({ recipeId: recipe.id, isFavorited })}
-                className="gap-2 rounded-full px-5"
-              >
-                <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-                {isFavorited ? 'Saved' : 'Save'}
-              </Button>
-            )}
+            <Button
+              variant={isFavorited ? 'default' : 'outline'}
+              size="sm"
+              onClick={() =>
+                user
+                  ? toggleFavorite({ recipeId: recipe.id, isFavorited })
+                  : navigate('/auth')
+              }
+              className="gap-2 rounded-full px-5"
+            >
+              <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+              {isFavorited ? 'Saved' : 'Save'}
+            </Button>
             <Button
               variant="outline"
               size="sm"

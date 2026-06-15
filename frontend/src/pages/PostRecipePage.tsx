@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ImageUploadZone } from '@/features/recipe-form/components/ImageUploadZone'
+import { MultiImageUploadZone } from '@/features/recipe-form/components/MultiImageUploadZone'
 import { IngredientListBuilder } from '@/features/recipe-form/components/IngredientListBuilder'
 import { StepByStepBuilder } from '@/features/recipe-form/components/StepByStepBuilder'
 import { VideoTutorialInput } from '@/features/recipe-form/components/VideoTutorialInput'
@@ -42,7 +42,29 @@ export default function PostRecipePage() {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = methods
 
   const onSubmit = (values: RecipeFormValues) => {
-    mutate(values as RecipeInput, {
+    const imageUrls = (values.images ?? []).filter(Boolean)
+    const payload: RecipeInput = {
+      title: values.title,
+      description: values.description,
+      imageUrl: imageUrls[0] ?? values.imageUrl ?? null,
+      prepTime: values.prepTime,
+      difficulty: values.difficulty,
+      category: values.category,
+      servings: values.servings,
+      calories: values.calories,
+      youtubeId: values.youtubeId,
+      popular: values.popular,
+      ingredients: values.ingredients,
+      instructions: values.instructions.map((ins) => ({
+        ...ins,
+        mediaUrl: ins.mediaUrl || undefined,
+        mediaType: ins.mediaType || undefined,
+      })),
+      nutrition: values.nutrition,
+      tags: values.tags,
+      images: imageUrls.map((url, i) => ({ url, position: i })),
+    }
+    mutate(payload, {
       onSuccess: (recipe) => navigate(`/recipes/${recipe.id}`),
     })
   }
@@ -64,9 +86,12 @@ export default function PostRecipePage() {
             <Textarea id="description" rows={3} placeholder="Tell us about your recipe…" {...register('description')} />
           </div>
 
-          <ImageUploadZone
-            value={watch('imageUrl') ?? ''}
-            onChange={(url) => setValue('imageUrl', url)}
+          <MultiImageUploadZone
+            values={watch('images') ?? []}
+            onChange={(urls) => {
+              setValue('images', urls)
+              setValue('imageUrl', urls[0] ?? '')
+            }}
           />
 
           <div className="grid gap-4 sm:grid-cols-3">

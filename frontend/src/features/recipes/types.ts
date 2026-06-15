@@ -10,6 +10,15 @@ export interface Instruction {
   recipeId: string
   step: string
   position: number
+  mediaUrl?: string | null
+  mediaType?: 'image' | 'video' | null
+}
+
+export interface RecipeImage {
+  id: number
+  recipeId: string
+  url: string
+  position: number
 }
 
 export interface NutritionItem {
@@ -49,6 +58,7 @@ export interface Recipe {
   instructions: Instruction[]
   nutrition: NutritionItem[]
   tags: Tag[]
+  images: RecipeImage[]
 }
 
 export interface RecipeFilters {

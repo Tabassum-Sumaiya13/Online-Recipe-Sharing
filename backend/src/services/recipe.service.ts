@@ -25,9 +25,10 @@ interface CreateRecipeInput {
   youtubeId?: string
   popular?: boolean
   ingredients: { item: string; position: number }[]
-  instructions: { step: string; position: number }[]
+  instructions: { step: string; position: number; mediaUrl?: string; mediaType?: string }[]
   nutrition: { label: string; value: string }[]
   tags: string[]
+  images: { url: string; position: number }[]
   authorId: string
   authorName: string
   authorAvatar?: string
@@ -57,6 +58,7 @@ export const recipeSelect = {
   instructions: { orderBy: { position: 'asc' as const } },
   nutrition: true,
   tags: true,
+  images: { orderBy: { position: 'asc' as const } },
 }
 
 export async function listRecipes(filters: RecipeFilters) {
@@ -134,6 +136,7 @@ export async function createRecipe(input: CreateRecipeInput) {
       instructions: { create: input.instructions },
       nutrition: { create: input.nutrition },
       tags: { create: input.tags.map((tag) => ({ tag })) },
+      images: { create: input.images },
     },
     select: recipeSelect,
   })
@@ -161,6 +164,9 @@ export async function updateRecipe(
     if (input.tags) {
       await tx.tag.deleteMany({ where: { recipeId: id } })
     }
+    if (input.images) {
+      await tx.recipeImage.deleteMany({ where: { recipeId: id } })
+    }
 
     return tx.recipe.update({
       where: { id },
@@ -179,6 +185,7 @@ export async function updateRecipe(
         ...(input.instructions && { instructions: { create: input.instructions } }),
         ...(input.nutrition && { nutrition: { create: input.nutrition } }),
         ...(input.tags && { tags: { create: input.tags.map((tag) => ({ tag })) } }),
+        ...(input.images && { images: { create: input.images } }),
       },
       select: recipeSelect,
     })

@@ -12,6 +12,7 @@ export async function create(req: Request, res: Response): Promise<void> {
     userId: req.user!.userId,
     content: req.body.content,
     rating: req.body.rating,
+    imageUrl: req.body.imageUrl,
   })
   res.status(201).json({ success: true, data: comment })
 }

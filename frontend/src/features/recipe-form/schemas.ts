@@ -8,6 +8,8 @@ const ingredientSchema = z.object({
 const instructionSchema = z.object({
   step: z.string().min(1, 'Step cannot be empty'),
   position: z.number().int().default(0),
+  mediaUrl: z.string().optional().or(z.literal('')),
+  mediaType: z.enum(['image', 'video']).optional(),
 })
 
 const nutritionSchema = z.object({
@@ -30,6 +32,7 @@ export const recipeFormSchema = z.object({
   instructions: z.array(instructionSchema).min(1, 'At least one step is required'),
   nutrition: z.array(nutritionSchema).default([]),
   tags: z.array(z.string().max(100)).default([]),
+  images: z.array(z.string()).default([]),
 })
 
 export type RecipeFormValues = z.infer<typeof recipeFormSchema>

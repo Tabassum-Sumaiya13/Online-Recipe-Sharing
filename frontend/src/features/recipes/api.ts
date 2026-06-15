@@ -64,9 +64,10 @@ export interface RecipeInput {
   youtubeId?: string | null
   popular?: boolean
   ingredients: { item: string; position: number }[]
-  instructions: { step: string; position: number }[]
+  instructions: { step: string; position: number; mediaUrl?: string; mediaType?: string }[]
   nutrition?: { label: string; value: string }[]
   tags?: string[]
+  images?: { url: string; position: number }[]
 }
 
 export function useCreateRecipe() {

@@ -57,6 +57,15 @@ export function CommentList({ recipeId }: CommentListProps) {
               </span>
             </div>
             <p className="mt-0.5 text-sm text-muted-foreground">{comment.content}</p>
+            {comment.imageUrl && (
+              <a href={comment.imageUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block">
+                <img
+                  src={comment.imageUrl}
+                  alt="Comment attachment"
+                  className="max-h-48 rounded-lg object-cover border"
+                />
+              </a>
+            )}
           </div>
           {user?.id === comment.user.id && (
             <Button
